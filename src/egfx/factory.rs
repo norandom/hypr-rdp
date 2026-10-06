@@ -16,6 +16,9 @@ pub(super) fn capability_avc_support(
     codec_policy: EgfxCodecPolicy,
 ) -> (bool, bool) {
     use ironrdp_egfx::pdu::*;
+    if codec_policy == EgfxCodecPolicy::ClearCodec {
+        return (false, false);
+    }
     let (avc420, avc444) = match cap {
         CapabilitySet::V8 { .. } => (false, false),
         CapabilitySet::V8_1 { flags } => {
@@ -44,7 +47,7 @@ pub(super) fn capability_avc_support(
     };
     let avc444 = match codec_policy {
         EgfxCodecPolicy::Auto | EgfxCodecPolicy::Avc444 => avc444 && !disable_avc444,
-        EgfxCodecPolicy::Avc420 => false,
+        EgfxCodecPolicy::Avc420 | EgfxCodecPolicy::ClearCodec => false,
     };
     (avc420, avc444)
 }
@@ -54,6 +57,17 @@ pub(super) fn preferred_capabilities_for_policy(
 ) -> Vec<ironrdp_egfx::pdu::CapabilitySet> {
     use ironrdp_egfx::pdu::*;
     match codec_policy {
+        EgfxCodecPolicy::ClearCodec => vec![
+            CapabilitySet::V10_7 {
+                flags: CapabilitiesV107Flags::AVC_DISABLED,
+            },
+            CapabilitySet::V10 {
+                flags: CapabilitiesV10Flags::AVC_DISABLED,
+            },
+            CapabilitySet::V8 {
+                flags: CapabilitiesV8Flags::empty(),
+            },
+        ],
         EgfxCodecPolicy::Auto | EgfxCodecPolicy::Avc420 => vec![
             CapabilitySet::V10_7 {
                 flags: CapabilitiesV107Flags::empty(),

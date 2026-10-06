@@ -1237,6 +1237,26 @@ fn auto_policy_uses_v10_avc444_when_v81_lacks_avc420_flag() {
 }
 
 #[test]
+fn clearcodec_policy_never_negotiates_avc() {
+    use ironrdp_egfx::pdu::*;
+
+    // A client offering AVC420 and AVC444 still gets no AVC under the ClearCodec policy.
+    for cap in [
+        CapabilitySet::V8_1 {
+            flags: CapabilitiesV81Flags::AVC420_ENABLED,
+        },
+        CapabilitySet::V10_7 {
+            flags: CapabilitiesV107Flags::empty(),
+        },
+    ] {
+        assert_eq!(
+            capability_avc_support(&cap, false, EgfxCodecPolicy::ClearCodec),
+            (false, false)
+        );
+    }
+}
+
+#[test]
 fn capability_support_respects_avc_disabled_flags_and_avc444_env_switch() {
     use ironrdp_egfx::pdu::*;
 
@@ -1364,6 +1384,15 @@ fn preferred_capabilities_keep_v10_auto_and_avc420_fallback() {
             },
         ]
     );
+
+    let clearcodec_caps = preferred_capabilities_for_policy(EgfxCodecPolicy::ClearCodec);
+    assert!(!clearcodec_caps.is_empty());
+    assert!(clearcodec_caps.iter().all(|cap| match cap {
+        CapabilitySet::V10_7 { flags } => flags.contains(CapabilitiesV107Flags::AVC_DISABLED),
+        CapabilitySet::V10 { flags } => flags.contains(CapabilitiesV10Flags::AVC_DISABLED),
+        CapabilitySet::V8 { .. } => true,
+        _ => false,
+    }));
 
     let avc444_caps = preferred_capabilities_for_policy(EgfxCodecPolicy::Avc444);
     assert!(matches!(

@@ -136,7 +136,8 @@ struct Args {
     #[arg(long)]
     max_frames_in_flight: Option<u32>,
 
-    /// EGFX codec policy: "avc420" (default), "avc444" (experimental), or "auto"
+    /// EGFX codec policy: "avc420" (default), "avc444" (experimental), "auto", or
+    /// "clearcodec" (never negotiate AVC: lossless, damage-only ClearCodec frames)
     #[arg(long)]
     egfx_codec: Option<String>,
 
@@ -627,8 +628,9 @@ fn parse_egfx_codec_policy(s: &str) -> anyhow::Result<EgfxCodecPolicy> {
         "auto" => Ok(EgfxCodecPolicy::Auto),
         "avc420" => Ok(EgfxCodecPolicy::Avc420),
         "avc444" => Ok(EgfxCodecPolicy::Avc444),
+        "clearcodec" => Ok(EgfxCodecPolicy::ClearCodec),
         other => anyhow::bail!(
-            "unknown EGFX codec '{}', expected 'auto', 'avc420', or 'avc444'",
+            "unknown EGFX codec '{}', expected 'auto', 'avc420', 'avc444', or 'clearcodec'",
             other
         ),
     }
@@ -945,6 +947,10 @@ mod tests {
         assert_eq!(
             parse_egfx_codec_policy("avc444").unwrap(),
             EgfxCodecPolicy::Avc444
+        );
+        assert_eq!(
+            parse_egfx_codec_policy("clearcodec").unwrap(),
+            EgfxCodecPolicy::ClearCodec
         );
         assert!(parse_egfx_codec_policy("h264").is_err());
     }

@@ -15,6 +15,8 @@ pub enum EgfxCodecPolicy {
     Auto,
     Avc420,
     Avc444,
+    /// Never negotiate AVC: send damage-only ClearCodec frames (xrdp-like).
+    ClearCodec,
 }
 
 pub(in crate::egfx) fn avc444_disabled_by_env() -> bool {
