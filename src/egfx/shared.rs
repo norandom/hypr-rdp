@@ -19,6 +19,13 @@ pub enum EgfxCodecPolicy {
     ClearCodec,
 }
 
+impl EgfxCodecPolicy {
+    /// Whether this policy can ever negotiate AVC (H.264).
+    pub fn allows_avc(self) -> bool {
+        !matches!(self, Self::ClearCodec)
+    }
+}
+
 pub(in crate::egfx) fn avc444_disabled_by_env() -> bool {
     std::env::var_os("HYPR_RDP_DISABLE_AVC444").is_some()
 }
@@ -172,7 +179,7 @@ impl EgfxShared {
         self.max_frames_in_flight.load(Ordering::Acquire).max(1)
     }
 
-    pub(in crate::egfx) fn codec_policy(&self) -> EgfxCodecPolicy {
+    pub(crate) fn codec_policy(&self) -> EgfxCodecPolicy {
         self.codec_policy
     }
 

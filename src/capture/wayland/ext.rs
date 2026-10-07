@@ -119,7 +119,12 @@ pub(super) fn capture_loop_ext(
     #[cfg(feature = "vaapi")]
     {
         let snapshot = output_layout.snapshot();
-        if dmabuf_setup_allowed(h264_backend, egfx_shared.is_some(), snapshot.as_ref()) {
+        // Zero-copy DMA-BUF capture only feeds VA-API H.264: skip it when the codec policy
+        // rules out AVC (it would only time out and fall back to SHM).
+        let avc_possible = egfx_shared
+            .as_ref()
+            .is_some_and(|shared| shared.codec_policy().allows_avc());
+        if dmabuf_setup_allowed(h264_backend, avc_possible, snapshot.as_ref()) {
             if let Some(ref dmabuf_result) =
                 dmabuf_capture::try_setup_dmabuf(state, qh, width, height)
             {

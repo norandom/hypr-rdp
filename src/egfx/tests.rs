@@ -1237,6 +1237,14 @@ fn auto_policy_uses_v10_avc444_when_v81_lacks_avc420_flag() {
 }
 
 #[test]
+fn only_the_clearcodec_policy_rules_out_avc() {
+    assert!(EgfxCodecPolicy::Auto.allows_avc());
+    assert!(EgfxCodecPolicy::Avc420.allows_avc());
+    assert!(EgfxCodecPolicy::Avc444.allows_avc());
+    assert!(!EgfxCodecPolicy::ClearCodec.allows_avc());
+}
+
+#[test]
 fn clearcodec_policy_never_negotiates_avc() {
     use ironrdp_egfx::pdu::*;
 
